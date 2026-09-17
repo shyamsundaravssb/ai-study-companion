@@ -88,14 +88,16 @@ export default function SpaceDetail({ params }: { params: Promise<{ spaceId: str
           ) : (
             <ul className="space-y-3">
               {projects.map(p => (
-                <li key={p.id} className="border p-4 rounded-lg hover:shadow-sm transition-shadow">
-                  <h3 className="text-lg font-semibold">{p.name}</h3>
-                  {p.description && <p className="text-gray-600 text-sm mt-1">{p.description}</p>}
-                  {p.learning_goal && (
-                    <div className="mt-2 text-sm bg-blue-50 text-blue-800 p-2 rounded">
-                      <span className="font-semibold">Goal:</span> {p.learning_goal}
-                    </div>
-                  )}
+                <li key={p.id} className="border rounded-lg hover:shadow-sm transition-shadow">
+                  <Link href={`/spaces/${spaceId}/projects/${p.id}/materials`} className="block p-4">
+                    <h3 className="text-lg font-semibold">{p.name}</h3>
+                    {p.description && <p className="text-gray-600 text-sm mt-1">{p.description}</p>}
+                    {p.learning_goal && (
+                      <div className="mt-2 text-sm bg-blue-50 text-blue-800 p-2 rounded">
+                        <span className="font-semibold">Goal:</span> {p.learning_goal}
+                      </div>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>
