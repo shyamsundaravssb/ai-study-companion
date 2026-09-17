@@ -101,7 +101,7 @@ def process_material(db: Session, material_id: str):
             for i in range(0, len(texts), batch_size):
                 batch_texts = texts[i:i+batch_size]
                 logger.info(f"Embedding batch of {len(batch_texts)} chunks...")
-                batch_embeddings = embedding_provider.embed_documents(batch_texts)
+                batch_embeddings = embedding_provider.embed_document(batch_texts, project_id=material.project_id)
                 all_embeddings.extend(batch_embeddings)
                 batches += 1
                 

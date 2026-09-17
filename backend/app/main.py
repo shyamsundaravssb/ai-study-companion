@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio
-from app.api.v1 import spaces, projects, materials
+from app.api.v1 import spaces, projects, materials, tutor
 from app.workers.job_queue import process_jobs
 
 @asynccontextmanager
@@ -28,6 +28,7 @@ app.add_middleware(
 app.include_router(spaces.router, prefix="/api/v1/spaces", tags=["spaces"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"])
 app.include_router(materials.router, prefix="/api/v1/projects", tags=["materials"])
+app.include_router(tutor.router, prefix="/api/v1", tags=["tutor"])
 
 @app.get("/health")
 def health_check():

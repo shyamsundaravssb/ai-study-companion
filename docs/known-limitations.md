@@ -1,0 +1,1 @@
+- The bash.00 cost logging rate assigned to 'openai/gpt-oss-20b' is an assumption made for testing, and the model's actual free tier status via this proxy hasn't been verified on a pricing page. (If pricing changes, it may be silently inaccurate since it relies on the hardcoded 0.0 fallback logic for this specific string).
