@@ -28,3 +28,15 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   }
   return null;
 }
+
+export const quizApi = {
+  generateQuiz: (projectId: string) => 
+    fetchApi(`/projects/${projectId}/quiz/generate`, { method: 'POST' }),
+  getAssessment: (projectId: string, assessmentId: string) =>
+    fetchApi(`/projects/${projectId}/assessments/${assessmentId}`),
+  submitAssessment: (projectId: string, assessmentId: string, answers: any) =>
+    fetchApi(`/projects/${projectId}/assessments/${assessmentId}/submit`, {
+      method: 'POST',
+      body: JSON.stringify({ answers })
+    })
+};

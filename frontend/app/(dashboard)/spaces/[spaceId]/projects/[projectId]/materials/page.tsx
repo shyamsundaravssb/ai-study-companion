@@ -4,6 +4,7 @@ import { useEffect, useState, use, useRef } from 'react';
 import { fetchApi } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ProjectNav } from '@/components/ProjectNav';
 
 export default function MaterialsPage({ params }: { params: Promise<{ spaceId: string, projectId: string }> }) {
   const { spaceId, projectId } = use(params);
@@ -128,7 +129,7 @@ export default function MaterialsPage({ params }: { params: Promise<{ spaceId: s
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <Link href={`/spaces/${spaceId}`} className="text-sm text-blue-600 hover:underline">&larr; Back to Space</Link>
+        <ProjectNav spaceId={spaceId} projectId={projectId} />
         <h1 className="text-3xl font-bold mt-2">{project.name}</h1>
         <p className="text-gray-600 mt-1">Manage learning materials for this project.</p>
       </div>

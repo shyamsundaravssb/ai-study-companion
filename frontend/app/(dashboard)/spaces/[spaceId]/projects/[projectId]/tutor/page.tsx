@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { fetchApi } from '@/lib/api-client';
+import { ProjectNav } from '@/components/ProjectNav';
 
 interface Citation {
   text: string;
@@ -22,7 +23,8 @@ interface Conversation {
   messages: Message[];
 }
 
-export default function TutorPage({ params }: { params: { spaceId: string, projectId: string } }) {
+export default function TutorPage({ params }: { params: Promise<{ spaceId: string, projectId: string }> }) {
+  const { spaceId, projectId } = use(params);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ export default function TutorPage({ params }: { params: { spaceId: string, proje
     // In a real app we'd load an existing one or list them.
     const initConv = async () => {
       try {
-        const conv = await fetchApi(`/projects/${params.projectId}/tutor/conversations`, {
+        const conv = await fetchApi(`/projects/${projectId}/tutor/conversations`, {
           method: 'POST'
         });
         setConversation(conv);
@@ -42,7 +44,7 @@ export default function TutorPage({ params }: { params: { spaceId: string, proje
       }
     };
     initConv();
-  }, [params.projectId]);
+  }, [projectId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,7 +71,7 @@ export default function TutorPage({ params }: { params: { spaceId: string, proje
 
     setLoading(true);
     try {
-      const responseMsg = await fetchApi(`/projects/${params.projectId}/tutor/conversations/${conversation.id}/messages`, {
+      const responseMsg = await fetchApi(`/projects/${projectId}/tutor/conversations/${conversation.id}/messages`, {
         method: 'POST',
         body: JSON.stringify({ content: userMsg })
       });
@@ -93,6 +95,7 @@ export default function TutorPage({ params }: { params: { spaceId: string, proje
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] p-6 bg-slate-50">
+      <ProjectNav spaceId={spaceId} projectId={projectId} />
       <h1 className="text-2xl font-semibold mb-4 text-slate-800">AI Tutor</h1>
       
       <div className="flex-1 overflow-y-auto mb-4 bg-white rounded-lg shadow p-4 flex flex-col space-y-4">

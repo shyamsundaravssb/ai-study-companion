@@ -40,6 +40,9 @@ def process_material(db: Session, material_id: str):
             page = doc.load_page(page_num)
             text = page.get_text()
             if text:
+                # FIX 2: Sanitize extracted PDF text by removing NUL bytes
+                text = text.replace('\x00', '')
+                
                 start_idx = len(full_text)
                 full_text += text
                 end_idx = len(full_text)
@@ -123,14 +126,66 @@ def process_material(db: Session, material_id: str):
                 
             db.bulk_save_objects(db_chunks)
             
+        # --- Concept Extraction (One-off per material ingestion) ---
+        try:
+            import asyncio
+            from app.ai.concept_extraction import extract_concepts
+            from app.models.concept import Concept
+            
+            # Strategy: take up to the first 8 chunks (~6k chars max) to avoid blowing up context window
+            # and to stay safely under the Groq free tier 8000 TPM limit, while still giving the LLM a 
+            # solid grasp of the core concepts in the material.
+            sampled_texts = [c["content"] for c in chunks_to_insert[:8]]
+            chunks_text = "\n\n".join(sampled_texts)
+            
+            if chunks_text.strip():
+                logger.info("Extracting concepts from material...")
+                extracted = asyncio.run(extract_concepts(material.project_id, chunks_text))
+                
+                # Idempotency guard: exact name collision check within the project
+                existing_concepts = db.query(Concept).filter_by(project_id=material.project_id).all()
+                existing_names = {c.name.lower().strip() for c in existing_concepts}
+                
+                new_db_concepts = []
+                for ec in extracted.concepts:
+                    clean_name = ec.name.strip()
+                    if clean_name.lower() not in existing_names:
+                        new_db_concepts.append(Concept(
+                            project_id=material.project_id,
+                            name=clean_name,
+                            description=ec.description.strip()
+                        ))
+                        existing_names.add(clean_name.lower())
+                
+                if new_db_concepts:
+                    db.bulk_save_objects(new_db_concepts)
+                    logger.info(f"Inserted {len(new_db_concepts)} new concepts for project {material.project_id}")
+                else:
+                    logger.info("No new concepts inserted (all were exact name collisions).")
+        except Exception as ce:
+            # Note: deliberate failure isolation. Do not fail the whole ingestion if concept extraction fails.
+            logger.error(f"Concept extraction failed for material {material_id}: {ce}")
+        # -----------------------------------------------------------
+
+            
         material.status = MaterialStatus.ready
+        material.error = None
         db.commit()
         logger.info(f"Successfully processed material {material_id}")
         
     except Exception as e:
         logger.error(f"Failed to process material {material_id}: {e}")
-        material.status = MaterialStatus.failed
-        db.commit()
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        
+        material = db.query(Material).filter_by(id=material_id).first()
+        if material:
+            material.status = MaterialStatus.failed
+            material.error = str(e)[:1000]
+            db.commit()
+            
         raise e
     finally:
         if temp_pdf_path and os.path.exists(temp_pdf_path):

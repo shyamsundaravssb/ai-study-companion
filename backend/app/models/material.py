@@ -20,6 +20,7 @@ class Material(Base):
     filename: Mapped[str] = mapped_column(String)
     storage_path: Mapped[str] = mapped_column(String)
     status: Mapped[MaterialStatus] = mapped_column(Enum(MaterialStatus), default=MaterialStatus.queued)
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     page_count: Mapped[int | None] = mapped_column(Integer)
 
